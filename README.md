@@ -10,6 +10,12 @@ A simple python script to download basic templates for web developers.
 | [express-ts-mongo](https://github.com/Besufikad17/express-ts-mongo-template)| Typescript | Express, MongoDB | Backend  | [0.0.1](https://github.com/Besufikad17/express-ts-mongo-template/releases/tag/%23template) |
 | [express-js-mongo](https://github.com/Besufikad17/express-js-mongo-template)| Javascript | Express, MongoDB | Backend  | [0.0.1](https://github.com/Besufikad17/express-js-mongo-template/releases/tag/%23template) |
 
+## Requirements
+
+- Python 3.x
+- [Halo](https://pypi.org/project/halo/)
+- [Requestes](https://pypi.org/project/requests/)
+
 ## Installation
 
   Currently I am working on installation script for linux and .exe file for windows but for the time being follow the instructions listed below.
@@ -22,6 +28,9 @@ A simple python script to download basic templates for web developers.
 
    //navigate to automata directory
    $ cd Automata 
+   
+   //install dependencies
+   $ sudo pip3 install -r requirements.txt
 
    //set Automata.py excutable
    $ sudo chmod +x Automata.py  
