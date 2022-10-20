@@ -30,11 +30,6 @@ A simple python script to download basic templates for web developers.
    $ sudo cp ./Automata.py /usr/local/bin 
 ```
 
-#### Preview
-
-   ![demo](media/demo.gif)
-
-
 ### Windows
 
 coming soon...
@@ -57,3 +52,11 @@ coming soon...
 ### Windows 
 
 coming soon...
+
+## Preview
+
+   ![demo](media/demo.gif)
+
+## Contributing 
+
+ Feel free to test it and report issue and if you want create your own template and include it in Automata you contact me in [Telegram](t.me/Itachiinthesky) or [Email](besumicheal@gmail.com) 
