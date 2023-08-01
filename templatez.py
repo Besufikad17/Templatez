@@ -1,8 +1,14 @@
 from halo import Halo
 from termcolor import colored
 from zipfile import ZipFile
+from pynput import keyboard
+from pynput.keyboard import Key
 import requests
 import sys, os
+import readline
+
+history_file = '.myhistory'
+readline.read_history_file(history_file)
 
 def add_template():
     return None
@@ -83,53 +89,71 @@ def parse_filters(cmd: str):
     return filters
 
 
-if len(sys.argv) == 1:
-    print_ascii()
+# def on_key_release(key):
+#     index = len(history) - 1
+#     try:
+#         if key == Key.up:
+#             print(history[index])
+#             index = index - 1
+#         elif key == Key.down:
+#             print(history[index])
+#             index = index - 1
+#     except IndexError:
+#         pass 
 
+if len(sys.argv) == 1:
+    print_ascii() 
     while True:
-        choice = print_menu()
-        if choice.startswith("t") or choice.startswith("templates"):
-            templates = []
-            if choice == "t" or choice == "templates":
-                with Halo("Fetching templates..", spinner='dots'):
-                    templates = fetch_templates() 
-            else:
-                with Halo("Fetching templates..", spinner='dots'):
-                    templates = fetch_templates(parse_filters(choice)) 
-            for template in  templates:
-                print_template_info(template)
-        elif choice.startswith("u") or choice.startswith("use"): 
-            filters = parse_filters(choice)
-            template = []
-            if len(filters) == 0: 
-                print(colored("Please enter the name of the template you want to use!!", "red"))
-            else: 
-                with Halo("Fetching template..", spinner='dots'):
-                    template = fetch_templates(filters)
-            if len(template) == 0:
-                print(colored("The specified template could not found!!", "red"))
-            else:
-                print(colored("\t{:<3} {:<25} {:<15} {:<10} {:<20} {:<15} {:<15}".format("No.","Name", "Language", "Type", "Technologies", "Author", "Stars"), "blue"))
-                for i in range(len(template)):
-                    print_template_info(template[i], i + 1)
-                no = int(input("select template : "))
-                try:
-                   t = template[no - 1]
-                   project_title = input("project title: ") 
-                   os.mkdir(project_title)
-                   os.chdir(project_title)
-                   download_and_install(t)
-                except OSError:
-                    print(colored(f"Directory exists with the name {project_title}!!", "red"))
-                except (IndexError, ValueError):
-                   print(colored("Please select valid template number", "red"))  
-        elif choice == "a" or choice == "add":
-            pass
-        elif choice == "q" or choice == "quit":
-            break
-        elif choice == "h" or choice == "help":
-            pass
-        else:
-            print("Invalid choice, use 'h' to get help")
+        try:
+           choice = print_menu()
+           if choice.startswith("t") or choice.startswith("templates"):
+               templates = []
+               if choice == "t" or choice == "templates":
+                   with Halo("Fetching templates..", spinner='dots'):
+                       templates = fetch_templates() 
+               else:
+                   with Halo("Fetching templates..", spinner='dots'):
+                       templates = fetch_templates(parse_filters(choice)) 
+               for template in  templates:
+                   print_template_info(template)
+           elif choice.startswith("u") or choice.startswith("use"): 
+               filters = parse_filters(choice)
+               template = []
+               if len(filters) == 0: 
+                   print(colored("Please enter the name of the template you want to use!!", "red"))
+               else: 
+                   with Halo("Fetching template..", spinner='dots'):
+                       template = fetch_templates(filters)
+               if len(template) == 0:
+                   print(colored("The specified template could not found!!", "red"))
+               else:
+                   print(colored("\t{:<3} {:<25} {:<15} {:<10} {:<20} {:<15} {:<15}".format("No.","Name", "Language", "Type", "Technologies", "Author", "Stars"), "blue"))
+                   for i in range(len(template)):
+                       print_template_info(template[i], i + 1)
+                       no = int(input("select template : "))
+                       try:
+                           t = template[no - 1]
+                           project_title = input("project title: ") 
+                           os.mkdir(project_title)
+                           os.chdir(project_title)
+                           download_and_install(t)
+                       except OSError:
+                           print(colored(f"Directory exists with the name {project_title}!!", "red"))
+                       except (IndexError, ValueError):
+                           print(colored("Please select valid template number", "red"))  
+           elif choice == "a" or choice == "add":
+                pass
+           elif choice == "q" or choice == "quit":
+                break
+           elif choice == "h" or choice == "help":
+                pass
+           else:
+                print("Invalid choice, use 'h' to get help") 
+        except (KeyboardInterrupt, EOFError):
+            break 
+        readline.add_history(choice)
+        readline.write_history_file(history_file)
+        #with keyboard.Listener(on_release=on_key_release) as listener:
+        #    listener.join()
 else:
     print(sys.argv)
