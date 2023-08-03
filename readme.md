@@ -8,7 +8,7 @@
 **Using installation script**
 
 ```bash
-
+   bash <(curl -s )
 ```
 
 **Building from source**
@@ -29,9 +29,9 @@
 ```bash 
    sudo chmod +x templatez.py   
 ```
-- copy templatez.py to /usr/local/bin to access it gloablly
+- running the script
 ```bash
-   sudo cp ./templatez.py /usr/local/bin
+   python3 templatez.py
 ```
 
 ## Usage
