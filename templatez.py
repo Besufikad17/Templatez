@@ -4,7 +4,7 @@ from zipfile import ZipFile
 import requests
 import sys, os
 import readline
-import json
+import json, shutil
 
 history_file = '.myhistory'
 readline.read_history_file(history_file)
@@ -75,6 +75,16 @@ def fetch_repo_data(author: str, repo_name: str):
     except requests.exceptions.HTTPError as err:
         halo.fail(colored(err, "red"))
 
+def move_and_remove(dir_name: str):
+    source_folder = os.getcwd() + "/" + dir_name + "/"
+    destination_folder = os.getcwd() + "/"
+
+    for file_name in os.listdir(source_folder):        
+        source = source_folder + file_name
+        destination = destination_folder + file_name
+        shutil.move(source, destination)
+    os.rmdir(source_folder)
+
 def download_and_install(template: dict):
     cwd = os.getcwd()
     url = template["url"]
@@ -98,6 +108,8 @@ def download_and_install(template: dict):
     with Halo("Cleaning files..") as halo:
         try:
             os.remove("template.zip")
+            if os.listdir()[0].startswith(template["author"]):
+                move_and_remove(os.listdir()[0])
             halo.succeed("Done")
         except OSError:
             halo.fail(colored("Template archive not found!!"))
@@ -172,55 +184,53 @@ if len(sys.argv) == 1:
                    except (IndexError, ValueError):
                        print(colored("Please select valid template number", "red"))  
            elif choice == "a" or choice == "add":
-                filters = parse_filters(choice)
-                if len(filters) == 0:
-                    name = input("name of the template : ")
-                    ttype = input("type of the template : ")
-                    technologies = input("tech stack used : ")
-                    github_url = input("github url : ")
-                    gdata = github_url.split("/")
-                    if name == "" or ttype == "" or technologies == "":
-                        print(colored("Please enter valid inputs!!", "red"))
-                        break
-                    if gdata[0] == "https:" and gdata[2] == "github.com" and len(gdata) == 5:
-                        with Halo("Checking the github repo...", spinner='dots'):
-                            template = fetch_templates({"github": github_url})
-                        if len(template) == 0:
-                            stars = 0
-                            lang = ""
-                            url = ""
-                            with Halo("Fetching repo info..", spinner='dots'):
-                                lang, stars, url = fetch_repo_data(gdata[3], gdata[4])
-                            template = {
-                                "name": name,
-                                "type": ttype,
-                                "author": gdata[3],
-                                "technologies": [technologies],
-                                "github": github_url,
-                                "url": url,
-                                "stars": stars,
-                                "language": lang
-                            }
-                            print(colored("\t{:<25} {:<15} {:<10} {:<20} {:<15} {:<15}".format("Name", "Language", "Type", "Tech Stack", "Author", "Stars"), "blue"))
-                            print_template_info(template)
-                            c = input("Submit (Y/N) ? ")
-                            if c.startswith("y"):
-                                with Halo("Uploading template...", spinner='dots') as halo:
-                                    code = add_template(template)
-                                    if code != 500:
-                                        halo.succeed("Done...")
-                                    else:
-                                        halo.fail("Error occurred")
-                        else:
-                            print(colored("There is a template with this github repo!!", "red"))
+                name = input("name of the template : ")
+                ttype = input("type of the template : ")
+                technologies = input("tech stack used : ")
+                github_url = input("github url : ")
+                gdata = github_url.split("/")
+                if name == "" or ttype == "" or technologies == "":
+                    print(colored("Please enter valid inputs!!", "red"))
+                    break
+                if gdata[0] == "https:" and gdata[2] == "github.com" and len(gdata) == 5:
+                    with Halo("Checking the github repo...", spinner='dots'):
+                        template = fetch_templates({"github": github_url})
+                    if len(template) == 0:
+                        stars = 0
+                        lang = ""
+                        url = ""
+                        with Halo("Fetching repo info..", spinner='dots'):
+                            lang, stars, url = fetch_repo_data(gdata[3], gdata[4])
+                        template = {
+                            "name": name,
+                            "type": ttype,
+                            "author": gdata[3],
+                            "technologies": [technologies],
+                            "github": github_url,
+                            "url": url,
+                            "stars": stars,
+                            "language": lang
+                        }
+                        print(colored("\t{:<25} {:<15} {:<10} {:<20} {:<15} {:<15}".format("Name", "Language", "Type", "Tech Stack", "Author", "Stars"), "blue"))
+                        print_template_info(template)
+                        c = input("Submit (Y/N) ? ")
+                        if c.startswith("y"):
+                            with Halo("Uploading template...", spinner='dots') as halo:
+                                code = add_template(template)
+                                if code != 500:
+                                    halo.succeed("Done...")
+                                else:
+                                    halo.fail("Error occurred")
                     else:
-                        print(colored("Please enter valid github url!!", "red"))
+                        print(colored("There is a template with this github repo!!", "red"))
+                else:
+                    print(colored("Please enter valid github url!!", "red"))
            elif choice == "q" or choice == "quit":
                 break
            elif choice == "h" or choice == "help":
                 pass
            else:
-                print("Invalid choice, use 'h' to get help") 
+                print(colored("Invalid choice, use 'h' to get help", "red")) 
         except (KeyboardInterrupt, EOFError):
             break 
         readline.add_history(choice)
