@@ -18,7 +18,7 @@
 ```bash
    git clone https://github.com/Besufikad17/Templatez.git 
 ```
-- navigate to automata directory
+- navigate to templatez directory
 ```bash 
    cd Templatez
 ```
