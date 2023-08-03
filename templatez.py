@@ -1,18 +1,39 @@
 from halo import Halo
 from termcolor import colored
 from zipfile import ZipFile
-from pynput import keyboard
-from pynput.keyboard import Key
 import requests
 import sys, os
 import readline
+import json
 
 history_file = '.myhistory'
 readline.read_history_file(history_file)
 
-def add_template():
-    return None
-
+def add_template(template: dict):
+    url = "https://jade-clean-hedgehog.cyclic.cloud/templates"
+    l = len(fetch_templates())
+    payload = json.dumps({
+      "id": l + 1,
+      "name": template["name"],
+      "type": template["type"],
+      "author": template["author"],
+      "technologies": template["technologies"],
+      "github": template["github"],
+      "url": template["url"],
+      "stars": template["stars"],
+      "language": template["language"]
+    })
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    try:
+        response = requests.request("POST", url, headers=headers, data=payload)
+        return response.status_code
+    except requests.exceptions.Timeout:
+        halo.fail(colored("Took longer than expected, please check your connection and try again!!", "red"))
+    except requests.exceptions.HTTPError as err:
+        halo.fail(colored(err, "red"))
+   
 def to_string(x: list):
     s = ""
     for element in x:
@@ -23,16 +44,36 @@ def to_string(x: list):
     return s
    
 def fetch_templates(filters={}):
-    if len(filters.items()) == 0:
-        return requests.get("https://jade-clean-hedgehog.cyclic.cloud/templates").json()
-    else:
-        query = "?"
-        for key in filters.keys():
-            if list(filters.keys()).index(key) == len(filters.keys()):
-                query = query + key + "=" + filters[key]
-            else:
-                query = query + key + "=" + filters[key] + "&"
-        return requests.get(f"https://jade-clean-hedgehog.cyclic.cloud/templates{query}").json() 
+    try:
+        if len(filters.items()) == 0:
+            return requests.get("https://jade-clean-hedgehog.cyclic.cloud/templates").json()
+        else:
+            query = "?"
+            for key in filters.keys():
+                if list(filters.keys()).index(key) == len(filters.keys()):
+                    query = query + key + "=" + filters[key]
+                else:
+                    query = query + key + "=" + filters[key] + "&"
+            return requests.get(f"https://jade-clean-hedgehog.cyclic.cloud/templates{query}").json()
+    except requests.exceptions.Timeout:
+        halo.fail(colored("Took longer than expected, please check your connection and try again!!", "red"))
+    except requests.exceptions.HTTPError as err:
+        halo.fail(colored(err, "red"))
+         
+
+def fetch_repo_data(author: str, repo_name: str):
+    url = f"https://api.github.com/repos/{author}/{repo_name}" 
+    try:
+        response = requests.get(url).json()
+        url = f"https://api.github.com/repos/{author}/{repo_name}/zipball/main"
+        if response["fork"]:
+            return response["parent"]["language"], response["stargazers_count"], url
+        else:
+            return response["language"], response["stargazers_count"], url
+    except requests.exceptions.Timeout:
+        halo.fail(colored("Took longer than expected, please check your connection and try again!!", "red"))
+    except requests.exceptions.HTTPError as err:
+        halo.fail(colored(err, "red"))
 
 def download_and_install(template: dict):
     cwd = os.getcwd()
@@ -88,25 +129,12 @@ def parse_filters(cmd: str):
             filters[command.split("=")[0] + "_like"] = command.split("=")[1]
     return filters
 
-
-# def on_key_release(key):
-#     index = len(history) - 1
-#     try:
-#         if key == Key.up:
-#             print(history[index])
-#             index = index - 1
-#         elif key == Key.down:
-#             print(history[index])
-#             index = index - 1
-#     except IndexError:
-#         pass 
-
 if len(sys.argv) == 1:
     print_ascii() 
     while True:
         try:
            choice = print_menu()
-           if choice.startswith("t") or choice.startswith("templates"):
+           if choice.startswith("templates"):
                templates = []
                if choice == "t" or choice == "templates":
                    with Halo("Fetching templates..", spinner='dots'):
@@ -114,9 +142,10 @@ if len(sys.argv) == 1:
                else:
                    with Halo("Fetching templates..", spinner='dots'):
                        templates = fetch_templates(parse_filters(choice)) 
+               print(colored("\t{:<25} {:<15} {:<10} {:<20} {:<15} {:<15}".format("Name", "Language", "Type", "Tech Stack", "Author", "Stars"), "blue"))
                for template in  templates:
                    print_template_info(template)
-           elif choice.startswith("u") or choice.startswith("use"): 
+           elif choice.startswith("use"): 
                filters = parse_filters(choice)
                template = []
                if len(filters) == 0: 
@@ -127,22 +156,65 @@ if len(sys.argv) == 1:
                if len(template) == 0:
                    print(colored("The specified template could not found!!", "red"))
                else:
-                   print(colored("\t{:<3} {:<25} {:<15} {:<10} {:<20} {:<15} {:<15}".format("No.","Name", "Language", "Type", "Technologies", "Author", "Stars"), "blue"))
+                   print(colored("\t{:<3} {:<25} {:<15} {:<10} {:<20} {:<15} {:<15}".format("No.","Name", "Language", "Type", "Tech Stack", "Author", "Stars"), "blue"))
                    for i in range(len(template)):
                        print_template_info(template[i], i + 1)
-                       no = int(input("select template : "))
-                       try:
-                           t = template[no - 1]
-                           project_title = input("project title: ") 
-                           os.mkdir(project_title)
-                           os.chdir(project_title)
-                           download_and_install(t)
-                       except OSError:
-                           print(colored(f"Directory exists with the name {project_title}!!", "red"))
-                       except (IndexError, ValueError):
-                           print(colored("Please select valid template number", "red"))  
+                   no = int(input("select template : "))
+                   try:
+                       t = template[no - 1]
+                       project_title = input("project title: ") 
+                       os.mkdir(project_title)
+                       os.chdir(project_title)
+                       download_and_install(t)
+                       break
+                   except OSError:
+                       print(colored(f"Directory exists with the name {project_title}!!", "red"))
+                   except (IndexError, ValueError):
+                       print(colored("Please select valid template number", "red"))  
            elif choice == "a" or choice == "add":
-                pass
+                filters = parse_filters(choice)
+                if len(filters) == 0:
+                    name = input("name of the template : ")
+                    ttype = input("type of the template : ")
+                    technologies = input("tech stack used : ")
+                    github_url = input("github url : ")
+                    gdata = github_url.split("/")
+                    if name == "" or ttype == "" or technologies == "":
+                        print(colored("Please enter valid inputs!!", "red"))
+                        break
+                    if gdata[0] == "https:" and gdata[2] == "github.com" and len(gdata) == 5:
+                        with Halo("Checking the github repo...", spinner='dots'):
+                            template = fetch_templates({"github": github_url})
+                        if len(template) == 0:
+                            stars = 0
+                            lang = ""
+                            url = ""
+                            with Halo("Fetching repo info..", spinner='dots'):
+                                lang, stars, url = fetch_repo_data(gdata[3], gdata[4])
+                            template = {
+                                "name": name,
+                                "type": ttype,
+                                "author": gdata[3],
+                                "technologies": [technologies],
+                                "github": github_url,
+                                "url": url,
+                                "stars": stars,
+                                "language": lang
+                            }
+                            print(colored("\t{:<25} {:<15} {:<10} {:<20} {:<15} {:<15}".format("Name", "Language", "Type", "Tech Stack", "Author", "Stars"), "blue"))
+                            print_template_info(template)
+                            c = input("Submit (Y/N) ? ")
+                            if c.startswith("y"):
+                                with Halo("Uploading template...", spinner='dots') as halo:
+                                    code = add_template(template)
+                                    if code != 500:
+                                        halo.succeed("Done...")
+                                    else:
+                                        halo.fail("Error occurred")
+                        else:
+                            print(colored("There is a template with this github repo!!", "red"))
+                    else:
+                        print(colored("Please enter valid github url!!", "red"))
            elif choice == "q" or choice == "quit":
                 break
            elif choice == "h" or choice == "help":
@@ -152,8 +224,6 @@ if len(sys.argv) == 1:
         except (KeyboardInterrupt, EOFError):
             break 
         readline.add_history(choice)
-        readline.write_history_file(history_file)
-        #with keyboard.Listener(on_release=on_key_release) as listener:
-        #    listener.join()
+        readline.write_history_file(history_file) 
 else:
     print(sys.argv)
