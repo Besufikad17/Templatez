@@ -3,3 +3,6 @@ test
 .myhistroy
 .vscode
 .myhistory
+build
+dist
+templatez.spec
