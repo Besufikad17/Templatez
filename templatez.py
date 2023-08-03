@@ -141,6 +141,33 @@ def parse_filters(cmd: str):
             filters[command.split("=")[0] + "_like"] = command.split("=")[1]
     return filters
 
+info = """
+Usage:
+
+  [command] [flag]
+
+Available Commands:
+
+  templates        Fetchs templates for server
+
+    Flags:
+      name string        Name of the template
+      author string      Author of the template
+      language string    Programming language used in the template
+      type string        Type of the template (frontend, backend..)
+  
+  u, use           Downloads the specified template
+
+    Flags:
+      name string        Name of the template
+
+  a, add           Adds new template to server
+
+  h, help          Displays information on how to use templatez
+
+  for more information about the usage check the docs -> 
+"""
+
 if len(sys.argv) == 1:
     print_ascii() 
     while True:
@@ -228,7 +255,7 @@ if len(sys.argv) == 1:
            elif choice == "q" or choice == "quit":
                 break
            elif choice == "h" or choice == "help":
-                pass
+                print(info)
            else:
                 print(colored("Invalid choice, use 'h' to get help", "red")) 
         except (KeyboardInterrupt, EOFError):
