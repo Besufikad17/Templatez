@@ -1,4 +1,3 @@
 halo
 termcolor
 requests
-readline
