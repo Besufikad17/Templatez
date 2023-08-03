@@ -7,8 +7,9 @@
 
 **Using installation script**
 
+- Download installation script from the [release](https://github.com/Besufikad17/Templatez/releases/download/%23script/install.sh) page.
 ```bash
-   bash <(curl -s )
+   sudo chmod u+x ./install.sh && ./install.sh
 ```
 
 **Building from source**
