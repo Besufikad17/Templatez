@@ -21,6 +21,10 @@
 ```bash 
    cd Templatez
 ```
+- install packages
+```bash
+   pip3 install -r requirements.txt
+```
 - set templatez.py excutable
 ```bash 
    sudo chmod +x templatez.py   

@@ -1,5 +1,4 @@
 halo
 termcolor
-zipfile
 requests
 readline
